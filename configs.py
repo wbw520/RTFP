@@ -8,16 +8,12 @@ def get_args_parser():
     parser.add_argument("--model_name", type=str, default="PSPNet")
     parser.add_argument("--batch_size", type=int, default=16,
                         help="Number of images sent to the network in one step.")
-    parser.add_argument("--data_dir", type=str, default="/home/wangbowen/",
+    parser.add_argument("--root", type=str, default="/home/wbw/city_data",
                         help="Path to the directory containing the image list.")
     parser.add_argument("--crop_size", type=int, default=[768, 768],
                         help="crop size for training and inference slice.")
     parser.add_argument("--learning_rate", type=float, default=0.0001,
                         help="Base learning rate for training with polynomial decay.")
-    parser.add_argument("--ignore_label", type=int, default=255,
-                        help="this kind of pixel will not used for both train and evaluation")
-    parser.add_argument("--num_classes", type=int, default=19,
-                        help="Number of classes to predict (including background).")
     parser.add_argument("--num_epoch", type=int, default=40,
                         help="Number of training steps.")
 

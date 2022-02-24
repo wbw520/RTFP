@@ -1,12 +1,15 @@
 import os
-
 import numpy as np
 import torch
 from PIL import Image
 from torch.utils import data
 
 
-def make_dataset(args, quality, mode):
+num_classes = 19
+ignore_label = 255
+
+
+def make_dataset_cityscapes(args, quality, mode):
     assert (quality == 'fine' and mode in ['train', 'val']) or \
            (quality == 'coarse' and mode in ['train', 'train_extra', 'val'])
 
@@ -32,10 +35,9 @@ def make_dataset(args, quality, mode):
 
 class CityScapes(data.Dataset):
     def __init__(self, args, quality, mode, joint_transform=None, standard_transform=None):
-        self.imgs = make_dataset(args, quality, mode)
+        self.imgs = make_dataset_cityscapes(args, quality, mode)
         if len(self.imgs) == 0:
             raise RuntimeError('Found 0 images, please check the data set')
-        ignore_label = 255
         self.quality = quality
         self.mode = mode
         self.joint_transform = joint_transform
@@ -63,7 +65,9 @@ class CityScapes(data.Dataset):
         if self.standard_transform is not None:
             img = self.standard_transform(img)
 
-        return img, torch.from_numpy(np.array(mask, dtype=np.int32)).long()
+        return {"images": img, "masks": torch.from_numpy(np.array(mask, dtype=np.int32)).long()}
 
     def __len__(self):
         return len(self.imgs)
+
+

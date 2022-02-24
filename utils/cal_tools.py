@@ -4,6 +4,7 @@ import numpy as np
 class IouCal(object):
     def __init__(self, args):
         self.num_class = args.num_classes
+        self.hist = np.zeros((self.num_class, self.num_class))
         self.name = ["road:", "sidewalk:", "building:", "wall:", "fence:", "pole:", "traffic light:", "traffic sign:",
                      "vegetation:", "terrain:", "sky:", "person:", "rider:", "car:", "truck:", "bus:", "train:",
                      "motorcycle:", "bicycle:"]
@@ -16,20 +17,17 @@ class IouCal(object):
         return np.diag(hist)/(hist.sum(1) + hist.sum(0) - np.diag(hist))   # IOU = TP / (TP + FP + FN)
 
     def evaluate(self, labels, preds):
-        hist = np.zeros((self.num_class, self.num_class))
-        labels = np.array(labels.cpu())
-        preds = np.array(preds.cpu())
+        labels = labels.cpu().detach().numpy()
+        preds = preds.cpu().detach().numpy()
         for label, pred in zip(labels, preds):
-            hist += self.fast_hist(label.flatten(), pred.flatten(), self.num_class)
-        return hist
+            self.hist += self.fast_hist(label.flatten(), pred.flatten(), self.num_class)
 
-    def iou_demo(self, labels, preds):
-        hist = self.evaluate(labels, preds)
-        acc = np.diag(hist).sum() / hist.sum()
-        acc_cls = np.diag(hist) / hist.sum(axis=1)
+    def iou_demo(self):
+        acc = np.diag(self.hist).sum() / self.hist.sum()
+        acc_cls = np.diag(self.hist) / self.hist.sum(axis=1)
         acc_cls = np.nanmean(acc_cls)
 
-        iou = self.per_class_iou(hist)
+        iou = self.per_class_iou(self.hist)
         STR = ""
         for i in range(len(self.name)):
             STR = STR + self.name[i] + str(round(iou[i], 3)) + " "
@@ -40,7 +38,9 @@ class IouCal(object):
 
 
 class AverageMeter(object):
-    def __init__(self):
+    def __init__(self, name, fmt=':f'):
+        self.name = name
+        self.fmt = fmt
         self.reset()
 
     def reset(self):
@@ -54,3 +54,24 @@ class AverageMeter(object):
         self.sum += val * n
         self.count += n
         self.avg = self.sum / self.count
+
+    def __str__(self):
+        fmtstr = '{name} {val' + self.fmt + '} ({avg' + self.fmt + '})'
+        return fmtstr.format(**self.__dict__)
+
+
+class ProgressMeter(object):
+    def __init__(self, num_batches, meters, prefix=""):
+        self.batch_fmtstr = self._get_batch_fmtstr(num_batches)
+        self.meters = meters
+        self.prefix = prefix
+
+    def display(self, batch):
+        entries = [self.prefix + self.batch_fmtstr.format(batch)]
+        entries += [str(meter) for meter in self.meters]
+        print('\t'.join(entries))
+
+    def _get_batch_fmtstr(self, num_batches):
+        num_digits = len(str(num_batches // 1))
+        fmt = '{:' + str(num_digits) + 'd}'
+        return '[' + fmt + '/' + fmt.format(num_batches) + ']'
