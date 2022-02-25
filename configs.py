@@ -6,7 +6,7 @@ def get_args_parser():
 
     # train settings
     parser.add_argument("--model_name", type=str, default="PSPNet")
-    parser.add_argument("--batch_size", type=int, default=5,
+    parser.add_argument("--batch_size", type=int, default=4,
                         help="Number of images sent to the network in one step.")
     parser.add_argument("--root", type=str, default="/home/wangbowen/DATA/cityscapes",
                         help="Path to the directory containing the image list.")
@@ -16,7 +16,7 @@ def get_args_parser():
     parser.add_argument("--num_epoch", type=int, default=40, help="Number of training steps.")
 
     # optimizer settings
-    parser.add_argument("--lr", type=float, default=0.001, help="Base learning rate for training with polynomial decay.")
+    parser.add_argument("--lr", type=float, default=0.01, help="Base learning rate for training with polynomial decay.")
     parser.add_argument("--lr_decay", type=float, default=0.9, help="learning rate decay.")
     parser.add_argument("--momentum", type=float, default=0.9, help="momentum.")
     parser.add_argument("--weight_decay", type=float, default=1e-4, help="weight decay.")

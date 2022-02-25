@@ -84,8 +84,8 @@ def evaluation(args, best_record, epoch, model, model_without_ddp, val_loader, c
 def inference_sliding(args, model, image):
     image_size = image.size()
     stride = int(math.ceil(args.crop_size[0] * args.stride_rate))
-    tile_rows = ceil((image_size[2]-args.crop_size[0])/stride)
-    tile_cols = ceil((image_size[3]-args.crop_size[1])/stride)
+    tile_rows = ceil((image_size[2]-args.crop_size[0])/stride) + 1
+    tile_cols = ceil((image_size[3]-args.crop_size[1])/stride) + 1
     b = image_size[0]
 
     full_probs = torch.from_numpy(np.zeros((b, args.num_classes, image_size[2], image_size[3]))).to(args.device)
@@ -108,8 +108,6 @@ def inference_sliding(args, model, image):
 
             with torch.set_grad_enabled(False):
                 padded_prediction = model(img)
-                if isinstance(padded_prediction, tuple):
-                    padded_prediction = padded_prediction[0]
             count_predictions[:, :, y1:y2, x1:x2] += 1
             full_probs[:, :, y1:y2, x1:x2] += padded_prediction  # accumulate the predictions
 

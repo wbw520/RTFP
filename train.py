@@ -39,7 +39,7 @@ def main():
     standard_transformations = get_standard_transformations()
     train_set = cityscapes.CityScapes(args, 'fine', 'train', joint_transform=joint_transformations,
                                       standard_transform=standard_transformations)
-    val_set = cityscapes.CityScapes(args, 'fine', 'val', joint_transform=joint_transformations,
+    val_set = cityscapes.CityScapes(args, 'fine', 'val', joint_transform=None,
                                     standard_transform=standard_transformations)
     args.num_classes = cityscapes.num_classes
 
