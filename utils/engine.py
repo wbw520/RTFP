@@ -8,12 +8,17 @@ from utils.cal_tools import IouCal, AverageMeter, ProgressMeter
 
 def train_model(args, epoch, model, train_loader, criterion, optimizer, writer, device):
     model.train()
-    train_main_loss = AverageMeter('Train Main Loss', ':.4')
-    train_aux_loss = AverageMeter('Train Aux Loss', ':.4')
-    progress = ProgressMeter(len(train_loader), [train_main_loss, train_aux_loss], prefix="Epoch: [{}]".format(epoch))
-    curr_iter = (epoch - 1) * len(train_loader)
+    train_main_loss = AverageMeter('Train Main Loss', ':.5')
+    train_aux_loss = AverageMeter('Train Aux Loss', ':.5')
+    lr = AverageMeter('lr', ':.5')
+    L = len(train_loader)
+    progress = ProgressMeter(L, [train_main_loss, train_aux_loss, lr], prefix="Epoch: [{}]".format(epoch))
+    curr_iter = epoch * L
 
     for i_batch, data in enumerate(train_loader):
+        optimizer.param_groups[0]['lr'] = 2 * args.lr * (1 - float(curr_iter) / (args.num_epoch * L)) ** args.lr_decay
+        optimizer.param_groups[1]['lr'] = args.lr * (1 - float(curr_iter) / (args.num_epoch * L)) ** args.lr_decay
+
         inputs = data["images"].to(device, dtype=torch.float32)
         mask = data["masks"].to(device, dtype=torch.int64)
 
@@ -23,8 +28,9 @@ def train_model(args, epoch, model, train_loader, criterion, optimizer, writer, 
 
         loss = main_loss + 0.4 * aux_loss
 
-        train_main_loss.update(main_loss.item)
-        train_aux_loss.update(aux_loss.item)
+        train_main_loss.update(main_loss.item())
+        train_aux_loss.update(aux_loss.item())
+        lr.update(optimizer.param_groups[1]['lr'])
 
         writer.add_scalar('train_main_loss', train_main_loss.avg, curr_iter)
         writer.add_scalar('train_aux_loss', train_aux_loss.avg, curr_iter)
@@ -40,7 +46,7 @@ def train_model(args, epoch, model, train_loader, criterion, optimizer, writer, 
             progress.display(i_batch)
 
 
-def evaluation(args, epoch, model, val_loader, criterion, device):
+def evaluation(args, best_record, epoch, model, model_without_ddp, val_loader, criterion, device):
     model.eval()
     val_loss = AverageMeter('Val Main Loss', ':.4')
     progress = ProgressMeter(len(val_loader), [val_loss], prefix="Epoch: [{}]".format(epoch))
@@ -58,21 +64,22 @@ def evaluation(args, epoch, model, val_loader, criterion, device):
 
     acc, acc_cls, mean_iou = iou.iou_demo()
 
-    if val_loss.avg < args['best_record']['val_loss']:
-        args['best_record']['val_loss'] = val_loss.avg
-        args['best_record']['epoch'] = epoch
-        args['best_record']['acc'] = acc
-        args['best_record']['acc_cls'] = acc_cls
-        args['best_record']['mean_iou'] = mean_iou
-        torch.save(model.state_dict(), os.path.join(args.output_dir, "_epoch", str(epoch), "_PSPNet.pt"))
+    if val_loss.avg < best_record['val_loss']:
+        best_record['val_loss'] = val_loss.avg
+        best_record['epoch'] = epoch
+        best_record['acc'] = acc
+        best_record['acc_cls'] = acc_cls
+        best_record['mean_iou'] = mean_iou
+        if args.output_dir:
+            torch.save(model_without_ddp.state_dict(), os.path.join(args.output_dir, "_epoch", str(epoch), "_PSPNet.pt"))
 
     print('-----------------------------------------------------------------------------------------------------------')
     print('[epoch %d], [val loss %.5f], [acc %.5f], [acc_cls %.5f], [mean_iou %.5f]' % (
         epoch, val_loss.avg, acc, acc_cls, mean_iou))
 
     print('best record: [val loss %.5f], [acc %.5f], [acc_cls %.5f], [mean_iou %.5f], ---- [epoch %d], '
-          % (args['best_record']['val_loss'], args['best_record']['acc'],
-                    args['best_record']['acc_cls'], args['best_record']['mean_iou'], args['best_record']['epoch']))
+          % (best_record['val_loss'], best_record['acc'],
+                    best_record['acc_cls'], best_record['mean_iou'], best_record['epoch']))
 
     print('-----------------------------------------------------------------------------------------------------------')
 

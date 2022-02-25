@@ -84,5 +84,5 @@ class PSPNet(nn.Module):
         x = self.ppm(x)
         x = self.final(x)
         if self.training and self.use_aux:
-            return F.upsample(x, x_size[2:], mode='bilinear'), F.upsample(aux, x_size[2:], mode='bilinear')
-        return F.upsample(x, x_size[2:], mode='bilinear')
+            return F.interpolate(x, x_size[2:], mode='bilinear'), F.upsample(aux, x_size[2:], mode='bilinear')
+        return F.interpolate(x, x_size[2:], mode='bilinear')
