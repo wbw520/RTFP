@@ -51,9 +51,9 @@ def evaluation(args, best_record, epoch, model, model_without_ddp, val_loader, c
         inputs = data["images"].to(device, dtype=torch.float32)
         mask = data["masks"].to(device, dtype=torch.int64)
 
-        pred = inference_sliding(args, model, inputs, args.crop_size, args.classes, args.stride_rate)
+        pred, full_pred = inference_sliding(args, model, inputs)
         iou.evaluate(pred, mask)
-        val_loss.update(criterion(pred, mask).item)
+        val_loss.update(criterion(full_pred, mask).item())
 
         if i_batch % 1 == 0:
             progress.display(i_batch)
@@ -88,8 +88,8 @@ def inference_sliding(args, model, image):
     tile_cols = ceil((image_size[3]-args.crop_size[1])/stride)
     b = image_size[0]
 
-    full_probs = torch.from_numpy(np.zeros((b, args.classes, image_size[2], image_size[3]))).to(args.device)
-    count_predictions = torch.from_numpy(np.zeros((b, args.classes, image_size[2], image_size[3]))).to(args.device)
+    full_probs = torch.from_numpy(np.zeros((b, args.num_classes, image_size[2], image_size[3]))).to(args.device)
+    count_predictions = torch.from_numpy(np.zeros((b, args.num_classes, image_size[2], image_size[3]))).to(args.device)
 
     for row in range(tile_rows):
         for col in range(tile_cols):
@@ -116,4 +116,4 @@ def inference_sliding(args, model, image):
     # average the predictions in the overlapping regions
     full_probs /= count_predictions
     _, preds = torch.max(full_probs, 1)
-    return preds
+    return preds, full_probs
