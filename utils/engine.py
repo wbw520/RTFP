@@ -81,28 +81,28 @@ def evaluation(args, best_record, epoch, model, model_without_ddp, val_loader, c
 
 
 @torch.no_grad()
-def inference_sliding(args, model, image, crop_size, classes, stride_rate=0.5):
+def inference_sliding(args, model, image):
     image_size = image.size()
-    stride = int(math.ceil(crop_size[0] * stride_rate))
-    tile_rows = ceil((image_size[2]-crop_size)/stride)
-    tile_cols = ceil((image_size[3]-crop_size)/stride)
+    stride = int(math.ceil(args.crop_size[0] * args.stride_rate))
+    tile_rows = ceil((image_size[2]-args.crop_size[0])/stride)
+    tile_cols = ceil((image_size[3]-args.crop_size[1])/stride)
     b = image_size[0]
 
-    full_probs = torch.from_numpy(np.zeros((b, classes, image_size[2], image_size[3]))).to(args.device)
-    count_predictions = torch.from_numpy(np.zeros((b, classes, image_size[2], image_size[3]))).to(args.device)
+    full_probs = torch.from_numpy(np.zeros((b, args.classes, image_size[2], image_size[3]))).to(args.device)
+    count_predictions = torch.from_numpy(np.zeros((b, args.classes, image_size[2], image_size[3]))).to(args.device)
 
     for row in range(tile_rows):
         for col in range(tile_cols):
             x1 = int(col * stride)
             y1 = int(row * stride)
-            x2 = x1 + crop_size
-            y2 = y1 + crop_size
+            x2 = x1 + args.crop_size[0]
+            y2 = y1 + args.crop_size[1]
             if row == tile_rows - 1:
                 y2 = image_size[2]
-                y1 = image_size[2] - crop_size
+                y1 = image_size[2] - args.crop_size[1]
             if col == tile_cols - 1:
                 x2 = image_size[3]
-                x1 = image_size[3] - crop_size
+                x1 = image_size[3] - args.crop_size[0]
 
             img = image[:, :, y1:y2, x1:x2]
 

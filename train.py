@@ -41,6 +41,7 @@ def main():
                                       standard_transform=standard_transformations)
     val_set = cityscapes.CityScapes(args, 'fine', 'val', joint_transform=joint_transformations,
                                     standard_transform=standard_transformations)
+    args.num_classes = cityscapes.num_classes
 
     if args.distributed:
         sampler_train = DistributedSampler(train_set)
