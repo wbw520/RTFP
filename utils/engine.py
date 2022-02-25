@@ -6,7 +6,7 @@ import os
 from utils.cal_tools import IouCal, AverageMeter, ProgressMeter
 
 
-def train_model(args, epoch, model, train_loader, criterion, optimizer, writer, device):
+def train_model(args, epoch, model, train_loader, criterion, optimizer, device):
     model.train()
     train_main_loss = AverageMeter('Train Main Loss', ':.5')
     train_aux_loss = AverageMeter('Train Aux Loss', ':.5')
@@ -31,10 +31,6 @@ def train_model(args, epoch, model, train_loader, criterion, optimizer, writer, 
         train_main_loss.update(main_loss.item())
         train_aux_loss.update(aux_loss.item())
         lr.update(optimizer.param_groups[1]['lr'])
-
-        writer.add_scalar('train_main_loss', train_main_loss.avg, curr_iter)
-        writer.add_scalar('train_aux_loss', train_aux_loss.avg, curr_iter)
-        writer.add_scalar('lr', optimizer.param_groups[1]['lr'], curr_iter)
 
         optimizer.zero_grad()
         loss.backward()

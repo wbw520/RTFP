@@ -6,9 +6,9 @@ def get_args_parser():
 
     # train settings
     parser.add_argument("--model_name", type=str, default="PSPNet")
-    parser.add_argument("--batch_size", type=int, default=4,
+    parser.add_argument("--batch_size", type=int, default=5,
                         help="Number of images sent to the network in one step.")
-    parser.add_argument("--root", type=str, default="/media/wbw/a7f02863-b441-49d0-b546-6ef6fefbbc7e/cityscapes",
+    parser.add_argument("--root", type=str, default="/home/wangbowen/DATA/cityscapes",
                         help="Path to the directory containing the image list.")
     parser.add_argument("--crop_size", type=int, default=[768, 768],
                         help="crop size for training and inference slice.")

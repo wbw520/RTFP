@@ -21,7 +21,7 @@ class _PyramidPoolingModule(nn.Module):
         x_size = x.size()
         out = [x]
         for f in self.features:
-            out.append(F.upsample(f(x), x_size[2:], mode='bilinear'))
+            out.append(F.interpolate(f(x), x_size[2:], mode='bilinear'))
         out = torch.cat(out, 1)
         return out
 
@@ -30,7 +30,7 @@ def initialize_weights(*models):
     for model in models:
         for module in model.modules():
             if isinstance(module, nn.Conv2d) or isinstance(module, nn.Linear):
-                nn.init.kaiming_normal(module.weight)
+                nn.init.kaiming_normal_(module.weight)
                 if module.bias is not None:
                     module.bias.data.zero_()
             elif isinstance(module, nn.BatchNorm2d):
