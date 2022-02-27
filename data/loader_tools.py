@@ -4,8 +4,9 @@ import torchvision.transforms as standard_transforms
 
 def get_joint_transformations(args):
     aug_list = [
-                joint_transforms.RandomSized(args.crop_size),
-                joint_transforms.RandomRotate(10),
+                joint_transforms.RandomSized(),
+                # joint_transforms.RandomRotate(10),
+                joint_transforms.RandomCrop(args.crop_size),
                 joint_transforms.RandomHorizontallyFlip(),
                 ]
     return joint_transforms.Compose(aug_list)

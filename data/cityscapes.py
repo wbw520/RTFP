@@ -6,6 +6,7 @@ from torch.utils import data
 
 
 num_classes = 19
+longer_size = 2048
 ignore_label = 255
 
 

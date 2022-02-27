@@ -138,20 +138,18 @@ class RandomRotate(object):
 
 
 class RandomSized(object):
-    def __init__(self, size):
-        self.size = size
+    def __init__(self, size=None):
+        self.size2 = size
         # self.scale = Scale(self.size)
-        self.crop = RandomCrop(self.size)
+        # self.crop = RandomCrop(self.size)
 
     def __call__(self, img, mask):
         assert img.size == mask.size
 
-        # w = int(random.uniform(0.5, 2) * img.size[0])
-        # h = int(random.uniform(0.5, 2) * img.size[1])
         w = int(random.uniform(0.8, 1.5) * img.size[0])
         h = int(w * (img.size[1]/img.size[0]))
 
         img, mask = img.resize((w, h), Image.BILINEAR), mask.resize((w, h), Image.NEAREST)
 
-        return self.crop(img, mask)
         # return self.crop(*self.scale(img, mask))
+        return img, mask

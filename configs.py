@@ -12,11 +12,11 @@ def get_args_parser():
                         help="Path to the directory containing the image list.")
     parser.add_argument("--crop_size", type=int, default=[768, 768],
                         help="crop size for training and inference slice.")
-    parser.add_argument("--stride_rate", type=float, default=0.5, help="stride ration.")
-    parser.add_argument("--num_epoch", type=int, default=40, help="Number of training steps.")
+    parser.add_argument("--stride_rate", type=float, default=0.5, help="stride ratio.")
+    parser.add_argument("--num_epoch", type=int, default=60, help="Number of training steps.")
 
     # optimizer settings
-    parser.add_argument("--lr", type=float, default=0.01, help="Base learning rate for training with polynomial decay.")
+    parser.add_argument("--lr", type=float, default=0.0001, help="Base learning rate for training with polynomial decay.")
     parser.add_argument("--lr_decay", type=float, default=0.9, help="learning rate decay.")
     parser.add_argument("--momentum", type=float, default=0.9, help="momentum.")
     parser.add_argument("--weight_decay", type=float, default=1e-4, help="weight decay.")

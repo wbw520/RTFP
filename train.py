@@ -20,6 +20,8 @@ def main():
     model.to(device).train()
     model_without_ddp = model
 
+    args.num_classes = cityscapes.num_classes
+
     if args.distributed:
         model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu], find_unused_parameters=True)
         model_without_ddp = model.module
@@ -28,12 +30,8 @@ def main():
 
     criterion = torch.nn.CrossEntropyLoss(reduction='mean', ignore_index=cityscapes.ignore_label).cuda()
 
-    optimizer = torch.optim.SGD([
-        {'params': [param for name, param in model_without_ddp.named_parameters() if name[-4:] == 'bias'],
-         'lr': 2 * args.lr},
-        {'params': [param for name, param in model_without_ddp.named_parameters() if name[-4:] != 'bias'],
-         'lr': args.lr, 'weight_decay': args.weight_decay}
-    ], momentum=args.momentum, nesterov=True)
+    params = [p for p in model_without_ddp.parameters() if p.requires_grad]
+    optimizer = torch.optim.AdamW(params, lr=args.lr)
 
     joint_transformations = get_joint_transformations(args)
     standard_transformations = get_standard_transformations()
@@ -41,7 +39,6 @@ def main():
                                       standard_transform=standard_transformations)
     val_set = cityscapes.CityScapes(args, 'fine', 'val', joint_transform=None,
                                     standard_transform=standard_transformations)
-    args.num_classes = cityscapes.num_classes
 
     if args.distributed:
         sampler_train = DistributedSampler(train_set)

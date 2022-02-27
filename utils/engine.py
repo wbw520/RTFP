@@ -16,8 +16,7 @@ def train_model(args, epoch, model, train_loader, criterion, optimizer, device):
     curr_iter = epoch * L
 
     for i_batch, data in enumerate(train_loader):
-        optimizer.param_groups[0]['lr'] = 2 * args.lr * (1 - float(curr_iter) / (args.num_epoch * L)) ** args.lr_decay
-        optimizer.param_groups[1]['lr'] = args.lr * (1 - float(curr_iter) / (args.num_epoch * L)) ** args.lr_decay
+        optimizer.param_groups[0]['lr'] = args.lr * (1 - float(curr_iter) / (args.num_epoch * L)) ** args.lr_decay
 
         inputs = data["images"].to(device, dtype=torch.float32)
         mask = data["masks"].to(device, dtype=torch.int64)
@@ -30,7 +29,7 @@ def train_model(args, epoch, model, train_loader, criterion, optimizer, device):
 
         train_main_loss.update(main_loss.item())
         train_aux_loss.update(aux_loss.item())
-        lr.update(optimizer.param_groups[1]['lr'])
+        lr.update(optimizer.param_groups[0]['lr'])
 
         optimizer.zero_grad()
         loss.backward()
@@ -55,7 +54,7 @@ def evaluation(args, best_record, epoch, model, model_without_ddp, val_loader, c
         iou.evaluate(pred, mask)
         val_loss.update(criterion(full_pred, mask).item())
 
-        if i_batch % 1 == 0:
+        if i_batch % args.print_freq == 0:
             progress.display(i_batch)
 
     acc, acc_cls, mean_iou = iou.iou_demo()
@@ -67,7 +66,7 @@ def evaluation(args, best_record, epoch, model, model_without_ddp, val_loader, c
         best_record['acc_cls'] = acc_cls
         best_record['mean_iou'] = mean_iou
         if args.output_dir:
-            torch.save(model_without_ddp.state_dict(), os.path.join(args.output_dir, "_epoch", str(epoch), "_PSPNet.pt"))
+            torch.save(model_without_ddp.state_dict(), args.output_dir + "_epoch" + str(epoch) + "_PSPNet.pt")
 
     print('-----------------------------------------------------------------------------------------------------------')
     print('[epoch %d], [val loss %.5f], [acc %.5f], [acc_cls %.5f], [mean_iou %.5f]' % (
