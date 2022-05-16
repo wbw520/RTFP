@@ -1,7 +1,6 @@
 import math
 import numbers
 import random
-
 from PIL import Image, ImageOps
 import numpy as np
 

@@ -2,7 +2,6 @@ import os
 import numpy as np
 import torch
 from PIL import Image
-from torch.utils import data
 
 
 num_classes = 19
@@ -34,7 +33,7 @@ def make_dataset_cityscapes(args, quality, mode):
     return items
 
 
-class CityScapes(data.Dataset):
+class CityScapes(torch.utils.data.Dataset):
     def __init__(self, args, quality, mode, joint_transform=None, standard_transform=None):
         self.imgs = make_dataset_cityscapes(args, quality, mode)
         if len(self.imgs) == 0:

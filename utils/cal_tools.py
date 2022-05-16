@@ -5,9 +5,12 @@ class IouCal(object):
     def __init__(self, args):
         self.num_class = args.num_classes
         self.hist = np.zeros((self.num_class, self.num_class))
-        self.name = ["road:", "sidewalk:", "building:", "wall:", "fence:", "pole:", "traffic light:", "traffic sign:",
-                     "vegetation:", "terrain:", "sky:", "person:", "rider:", "car:", "truck:", "bus:", "train:",
-                     "motorcycle:", "bicycle:"]
+        if args.dataset == "city":
+            self.name = ["road:", "sidewalk:", "building:", "wall:", "fence:", "pole:", "traffic light:", "traffic sign:",
+                         "vegetation:", "terrain:", "sky:", "person:", "rider:", "car:", "truck:", "bus:", "train:",
+                         "motorcycle:", "bicycle:"]
+        elif args.dataset == "facade":
+            self.name = []
 
     def fast_hist(self, label, pred, num_class):
         k = (label >= 0) & (pred < self.num_class)
