@@ -6,7 +6,7 @@ def get_args_parser():
 
     # train settings
     parser.add_argument("--dataset", type=str, default="cityscapes")
-    parser.add_argument("--model_name", type=str, default="Segmenter")
+    parser.add_argument("--model_name", type=str, default="PSPNet")
     parser.add_argument("--batch_size", type=int, default=1,
                         help="Number of images sent to the network in one step.")
     parser.add_argument("--root", type=str, default="/home/wangbowen/DATA/cityscapes",

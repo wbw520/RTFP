@@ -77,7 +77,7 @@ def evaluation(args, best_record, epoch, model, model_without_ddp, val_loader, c
         best_record['acc_cls'] = acc_cls
         best_record['mean_iou'] = mean_iou
         if args.output_dir:
-            torch.save(model_without_ddp.state_dict(), args.output_dir + "_epoch" + str(epoch) + "_PSPNet.pt")
+            torch.save(model_without_ddp.state_dict(), args.output_dir + str(epoch) + "_epoch_" + args.model_name + ".pt")
 
     print('-----------------------------------------------------------------------------------------------------------')
     print('[epoch %d], [val loss %.5f], [acc %.5f], [acc_cls %.5f], [mean_iou %.5f]' % (
