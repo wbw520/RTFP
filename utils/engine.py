@@ -2,43 +2,54 @@ from math import ceil
 import torch
 import numpy as np
 import math
-import os
+import sys
+import utils2.lr_sched as lr_sched
 from utils.cal_tools import IouCal, AverageMeter, ProgressMeter
 
 
-def train_model(args, epoch, model, train_loader, criterion, optimizer, device):
+def train_model(args, epoch, model, train_loader, criterion, optimizer, loss_scaler, device):
     model.train()
     train_main_loss = AverageMeter('Train Main Loss', ':.5')
     train_aux_loss = AverageMeter('Train Aux Loss', ':.5')
     lr = AverageMeter('lr', ':.5')
     L = len(train_loader)
-    progress = ProgressMeter(L, [train_main_loss, train_aux_loss, lr], prefix="Epoch: [{}]".format(epoch))
     curr_iter = epoch * L
+    progress = ProgressMeter(L, [train_main_loss, train_aux_loss, lr], prefix="Epoch: [{}]".format(epoch))
+    accum_iter = args.accum_iter
 
-    for i_batch, data in enumerate(train_loader):
+    for data_iter_step, data in enumerate(train_loader):
         optimizer.param_groups[0]['lr'] = args.lr * (1 - float(curr_iter) / (args.num_epoch * L)) ** args.lr_decay
+        # if data_iter_step % accum_iter == 0:
+        #     lr_sched.adjust_learning_rate(optimizer, data_iter_step / len(train_loader) + epoch, args)
 
         inputs = data["images"].to(device, dtype=torch.float32)
         mask = data["masks"].to(device, dtype=torch.int64)
 
-        outputs, aux = model(inputs)
-        main_loss = criterion(outputs, mask)
-        aux_loss = criterion(aux, mask)
+        with torch.cuda.amp.autocast():
+            outputs, aux = model(inputs)
+            main_loss = criterion(outputs, mask)
+            aux_loss = criterion(aux, mask)
+            loss = main_loss + 0.4 * aux_loss
 
-        loss = main_loss + 0.4 * aux_loss
+        loss_value = loss.item()
+        if not math.isfinite(loss_value):
+            print("Loss is {}, stopping training".format(loss_value))
+            sys.exit(2)
+
+        loss_scaler(loss, optimizer, parameters=model.parameters(), update_grad=(data_iter_step + 1) % accum_iter == 0)
+        if (data_iter_step + 1) % accum_iter == 0:
+            optimizer.zero_grad()
+
+        torch.cuda.synchronize()
 
         train_main_loss.update(main_loss.item())
         train_aux_loss.update(aux_loss.item())
         lr.update(optimizer.param_groups[0]['lr'])
 
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
-
         curr_iter += 1
 
-        if i_batch % args.print_freq == 0:
-            progress.display(i_batch)
+        if data_iter_step % args.print_freq == 0:
+            progress.display(data_iter_step)
 
 
 def evaluation(args, best_record, epoch, model, model_without_ddp, val_loader, criterion, device):
@@ -59,7 +70,7 @@ def evaluation(args, best_record, epoch, model, model_without_ddp, val_loader, c
 
     acc, acc_cls, mean_iou = iou.iou_demo()
 
-    if val_loss.avg < best_record['val_loss']:
+    if mean_iou > best_record['mean_iou']:
         best_record['val_loss'] = val_loss.avg
         best_record['epoch'] = epoch
         best_record['acc'] = acc

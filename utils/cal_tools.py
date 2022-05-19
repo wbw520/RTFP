@@ -5,7 +5,7 @@ class IouCal(object):
     def __init__(self, args):
         self.num_class = args.num_classes
         self.hist = np.zeros((self.num_class, self.num_class))
-        if args.dataset == "city":
+        if args.dataset == "cityscapes":
             self.name = ["road:", "sidewalk:", "building:", "wall:", "fence:", "pole:", "traffic light:", "traffic sign:",
                          "vegetation:", "terrain:", "sky:", "person:", "rider:", "car:", "truck:", "bus:", "train:",
                          "motorcycle:", "bicycle:"]
