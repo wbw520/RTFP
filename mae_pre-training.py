@@ -7,7 +7,7 @@ from pathlib import Path
 from torch.utils.data import DistributedSampler
 from data import cityscapes
 from data.loader_tools import get_joint_transformations, get_standard_transformations
-from model import mae_model as models_mae
+from model.mae_model import mae_vit
 from utils2.misc import NativeScalerWithGradNormCount as NativeScaler
 import timm.optim.optim_factory as optim_factory
 import os
@@ -23,17 +23,14 @@ import time
 
 def get_args_parser():
     parser = argparse.ArgumentParser('MAE pre-training', add_help=False)
-    parser.add_argument('--batch_size', default=1, type=int,
+    parser.add_argument('--batch_size', default=4, type=int,
                         help='Batch size per GPU (effective batch size is batch_size * accum_iter * # gpus')
-    parser.add_argument('--epochs', default=200, type=int)
+    parser.add_argument('--num_epochs', default=100, type=int)
     parser.add_argument('--accum_iter', default=1, type=int,
                         help='Accumulate gradient iterations (for increasing the effective batch size under memory constraints)')
     parser.add_argument('--use_pre', default=False, type=bool)
 
     # Model parameters
-    parser.add_argument('--model', default='mae_vit_large_patch8', type=str, metavar='MODEL',
-                        help='Name of model to train')
-    parser.add_argument('--patch_size', default=8, type=int, help='size of patch')
     parser.add_argument("--crop_size", type=int, default=[640, 640],
                         help="crop size for training and inference slice.")
     parser.add_argument("--stride_rate", type=float, default=0.5, help="stride ratio.")
@@ -44,6 +41,15 @@ def get_args_parser():
     parser.add_argument('--norm_pix_loss', action='store_true',
                         help='Use (per-patch) normalized pixels as targets for computing loss')
     parser.set_defaults(norm_pix_loss=False)
+
+    # VIT settings
+    parser.add_argument("--patch_size", type=int, default=16, help="define the patch size.")
+    parser.add_argument("--encoder_embed_dim", type=int, default=1024, help="dimension for encoder.")
+    parser.add_argument("--decoder_embed_dim", type=int, default=512, help="dimension for decoder.")
+    parser.add_argument("--encoder_depth", type=int, default=24, help="depth for encoder.")
+    parser.add_argument("--decoder_depth", type=int, default=8, help="depth for decoder.")
+    parser.add_argument("--encoder_num_head", type=int, default=16, help="head number for encoder.")
+    parser.add_argument("--decoder_num_head", type=int, default=16, help="head number for decoder.")
 
     # Optimizer parameters
     parser.add_argument('--weight_decay', type=float, default=0.05,
@@ -56,13 +62,13 @@ def get_args_parser():
     parser.add_argument('--min_lr', type=float, default=0., metavar='LR',
                         help='lower lr bound for cyclic schedulers that hit 0')
 
-    parser.add_argument('--warmup_epochs', type=int, default=40, metavar='N',
+    parser.add_argument('--warmup_epochs', type=int, default=20, metavar='N',
                         help='epochs to warmup LR')
 
     # Dataset parameters
     parser.add_argument('--root', default="/home/wangbowen/DATA/cityscapes", type=str,
                         help='dataset path')
-    parser.add_argument('--output_dir', default='save_model',
+    parser.add_argument('--output_dir', default='save_model/',
                         help='path where to save, empty for no saving')
     parser.add_argument('--log_dir', default='save_model',
                         help='path where to tensorboard log')
@@ -86,7 +92,7 @@ def main():
     misc.init_distributed_mode(args)
     device = torch.device(args.device)
     cudnn.benchmark = True
-    model = models_mae.__dict__[args.model](norm_pix_loss=args.norm_pix_loss, img_size=args.crop_size[0])
+    model = mae_vit(args)
     model.to(device)
     model_without_ddp = model
     # print("Model = %s" % str(model_without_ddp))
@@ -97,6 +103,7 @@ def main():
                                       standard_transform=standard_transformations)
 
     if args.use_pre:
+        # use the pre-trained parameter from mae paper
         checkpoint = torch.load("save_model/mae_visualize_vit_large.pth", map_location='cpu')
         checkpoint_model = checkpoint['model']
         interpolate_pos_embed(model, checkpoint_model)
@@ -138,17 +145,18 @@ def main():
     print(optimizer)
     loss_scaler = NativeScaler()
 
-    print(f"Start training for {args.epochs} epochs")
+    print(f"Start training for {args.num_epochs} epochs")
     start_time = time.time()
 
-    for epoch in range(args.epochs):
+    for epoch in range(args.num_epochs):
         if args.distributed:
             sampler_train.set_epoch(epoch)
 
-        if args.output_dir and ((epoch + 1) % 20 == 0 or epoch + 1 == args.epochs):
-            misc.save_model(
-                args=args, model=model, model_without_ddp=model_without_ddp, optimizer=optimizer,
-                loss_scaler=loss_scaler, epoch=epoch)
+        if args.output_dir and ((epoch + 1) % 50 == 0 or epoch + 1 == args.num_epochs):
+            torch.save(model_without_ddp.state_dict(),
+                       args.output_dir + "mae_pre_epoch" + str(epoch) + "_crop" + str(args.crop_size[0]) + "_patch" +
+                       str(args.patch_size) + "_ed" + str(args.encoder_embed_dim) + "_depth" + str(args.encoder_depth) +
+                       "_head" + str(args.encoder_num_head) + ".pt")
 
         train_stats = train_one_epoch(
             model, train_loader,

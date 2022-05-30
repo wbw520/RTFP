@@ -6,7 +6,8 @@ def get_args_parser():
 
     # train settings
     parser.add_argument("--dataset", type=str, default="cityscapes")
-    parser.add_argument("--model_name", type=str, default="PSPNet")
+    parser.add_argument("--model_name", type=str, default="Segmenter")
+    parser.add_argument("--pre_model", type=str, default="mae_pre_epoch99_crop640_patch8_ed768_depth12_head12.pt")
     parser.add_argument("--batch_size", type=int, default=1,
                         help="Number of images sent to the network in one step.")
     parser.add_argument("--root", type=str, default="/home/wangbowen/DATA/cityscapes",
@@ -14,7 +15,7 @@ def get_args_parser():
     parser.add_argument("--crop_size", type=int, default=[640, 640],
                         help="crop size for training and inference slice.")
     parser.add_argument("--stride_rate", type=float, default=0.5, help="stride ratio.")
-    parser.add_argument("--num_epoch", type=int, default=60, help="Number of training steps.")
+    parser.add_argument("--num_epoch", type=int, default=200, help="Number of training steps.")
     parser.add_argument("--num_classes", type=int, default=19, help="Number of class for dataset.")
     parser.add_argument('--accum_iter', default=1, type=int,
                         help='Accumulate gradient iterations (for increasing the effective batch size under memory constraints)')

@@ -7,7 +7,7 @@ import shutil
 
 
 def main():
-    root = "/home/wangbowen/DATA/facades/facade_raw"
+    root = "/home/wangbowen/DATA/Facade/"
     item_list = get_name(root, mode_folder=False)
     image_list = []
     for item in item_list:

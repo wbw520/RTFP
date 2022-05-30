@@ -62,10 +62,7 @@ class MaskTransformer(nn.Module):
 
         patches = patches / patches.norm(dim=-1, keepdim=True)
         cls_seg_feat = cls_seg_feat / cls_seg_feat.norm(dim=-1, keepdim=True)
-        print(patches.shape)
-        print(cls_seg_feat.shape)
         masks = patches @ cls_seg_feat.transpose(1, 2)
-        print(masks.shape)
         masks = self.mask_norm(masks)
         masks = rearrange(masks, "b (h w) n -> b n h w", h=int(GS))
 

@@ -79,5 +79,5 @@ def resize_pos_embed(posemb, grid_old_shape, grid_new_shape, num_extra_tokens):
 
 
 def vit_encoder(**kwargs):
-    model = VisionTransformer(mlp_ratio=4, qkv_bias=True, norm_layer=partial(nn.LayerNorm, eps=1e-6), **kwargs)
+    model = VisionTransformer(mlp_ratio=4, qkv_bias=True, norm_layer=partial(nn.LayerNorm, eps=1e-6), num_classes=0, **kwargs)
     return model

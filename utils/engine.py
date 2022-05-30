@@ -10,11 +10,14 @@ from utils.cal_tools import IouCal, AverageMeter, ProgressMeter
 def train_model(args, epoch, model, train_loader, criterion, optimizer, loss_scaler, device):
     model.train()
     train_main_loss = AverageMeter('Train Main Loss', ':.5')
-    train_aux_loss = AverageMeter('Train Aux Loss', ':.5')
     lr = AverageMeter('lr', ':.5')
     L = len(train_loader)
     curr_iter = epoch * L
-    progress = ProgressMeter(L, [train_main_loss, train_aux_loss, lr], prefix="Epoch: [{}]".format(epoch))
+    record = [lr, train_main_loss]
+    if args.model_name == "PSPNet":
+        train_aux_loss = AverageMeter('Train Aux Loss', ':.5')
+        record.append(train_aux_loss)
+    progress = ProgressMeter(L, record, prefix="Epoch: [{}]".format(epoch))
     accum_iter = args.accum_iter
 
     for data_iter_step, data in enumerate(train_loader):
@@ -26,10 +29,15 @@ def train_model(args, epoch, model, train_loader, criterion, optimizer, loss_sca
         mask = data["masks"].to(device, dtype=torch.int64)
 
         with torch.cuda.amp.autocast():
-            outputs, aux = model(inputs)
-            main_loss = criterion(outputs, mask)
-            aux_loss = criterion(aux, mask)
-            loss = main_loss + 0.4 * aux_loss
+            if args.model_name == "PSPNet":
+                outputs, aux = model(inputs)
+                main_loss = criterion(outputs, mask)
+                aux_loss = criterion(aux, mask)
+                loss = main_loss + 0.4 * aux_loss
+            else:
+                outputs = model(inputs)
+                main_loss = criterion(outputs, mask)
+                loss = main_loss
 
         loss_value = loss.item()
         if not math.isfinite(loss_value):
@@ -43,7 +51,8 @@ def train_model(args, epoch, model, train_loader, criterion, optimizer, loss_sca
         torch.cuda.synchronize()
 
         train_main_loss.update(main_loss.item())
-        train_aux_loss.update(aux_loss.item())
+        if args.model_name == "PSPNet":
+            train_aux_loss.update(aux_loss.item())
         lr.update(optimizer.param_groups[0]['lr'])
 
         curr_iter += 1
@@ -77,7 +86,7 @@ def evaluation(args, best_record, epoch, model, model_without_ddp, val_loader, c
         best_record['acc_cls'] = acc_cls
         best_record['mean_iou'] = mean_iou
         if args.output_dir:
-            torch.save(model_without_ddp.state_dict(), args.output_dir + str(epoch) + "_epoch_" + args.model_name + ".pt")
+            torch.save(model_without_ddp.state_dict(), args.output_dir + args.model_name + ".pt")
 
     print('-----------------------------------------------------------------------------------------------------------')
     print('[epoch %d], [val loss %.5f], [acc %.5f], [acc_cls %.5f], [mean_iou %.5f]' % (
