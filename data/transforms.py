@@ -152,3 +152,14 @@ class RandomSized(object):
 
         # return self.crop(*self.scale(img, mask))
         return img, mask
+
+
+class Resize(object):
+    def __init__(self, args):
+        self.h = args.setting_size[0]
+        self.w = args.setting_size[1]
+
+    def __call__(self, img, mask):
+        img, mask = img.resize((self.w, self.h), Image.BILINEAR), mask.resize((self.w, self.h), Image.NEAREST)
+
+        return img, mask

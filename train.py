@@ -1,11 +1,10 @@
 import argparse
 import torch.backends.cudnn as cudnn
-from data import cityscapes
+from data.get_data_set import get_data
 from termcolor import colored
 from utils.engine import train_model, evaluation
 from torch.utils.data import DataLoader
 import torch
-from data.loader_tools import get_joint_transformations, get_standard_transformations
 from torch.utils.data import DistributedSampler
 import utils2.misc as misc
 from configs import get_args_parser
@@ -20,17 +19,13 @@ def main():
     misc.init_distributed_mode(args)
     device = torch.device(args.device)
     cudnn.benchmark = True
+
+    train_set, val_set, ignore_index = get_data(args)
+    best_record = {'epoch': 0, 'val_loss': 1e10, 'acc': 0, 'acc_cls': 0, 'mean_iou': 0}
+
     model = model_generation(args)
     model.to(device).train()
     model_without_ddp = model
-
-    joint_transformations = get_joint_transformations(args)
-    standard_transformations = get_standard_transformations()
-    train_set = cityscapes.CityScapes(args, 'fine', 'train', joint_transform=joint_transformations,
-                                      standard_transform=standard_transformations)
-    val_set = cityscapes.CityScapes(args, 'fine', 'val', joint_transform=None,
-                                    standard_transform=standard_transformations)
-    best_record = {'epoch': 0, 'val_loss': 1e10, 'acc': 0, 'acc_cls': 0, 'mean_iou': 0}
 
     if args.distributed:
         model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu], find_unused_parameters=True)
@@ -45,7 +40,7 @@ def main():
     train_loader = DataLoader(train_set, batch_sampler=batch_sampler_train, num_workers=args.num_workers, pin_memory=True)
     val_loader = DataLoader(val_set, batch_size=args.batch_size, sampler=sampler_val, num_workers=args.num_workers, shuffle=False)
 
-    criterion = torch.nn.CrossEntropyLoss(reduction='mean', ignore_index=cityscapes.ignore_label).cuda()
+    criterion = torch.nn.CrossEntropyLoss(reduction='mean', ignore_index=ignore_index).cuda()
     # param_groups = optim_factory.add_weight_decay(model_without_ddp, args.weight_decay)
     param_groups = [p for p in model_without_ddp.parameters() if p.requires_grad]
     optimizer = torch.optim.AdamW(param_groups, lr=args.lr, betas=(0.9, 0.95))
@@ -77,8 +72,4 @@ def main():
 if __name__ == '__main__':
     parser = argparse.ArgumentParser('model training and evaluation script', parents=[get_args_parser()])
     args = parser.parse_args()
-    if args.dataset == "cityscapes":
-        args.num_classes = cityscapes.num_classes
-    else:
-        args.num_classes = 1
     main()

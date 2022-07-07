@@ -28,7 +28,7 @@ def get_args_parser():
     parser.add_argument('--num_epochs', default=100, type=int)
     parser.add_argument('--accum_iter', default=1, type=int,
                         help='Accumulate gradient iterations (for increasing the effective batch size under memory constraints)')
-    parser.add_argument('--use_pre', default=False, type=bool)
+    parser.add_argument('--use_pre', default=True, type=bool)
 
     # Model parameters
     parser.add_argument("--crop_size", type=int, default=[640, 640],
@@ -44,11 +44,11 @@ def get_args_parser():
 
     # VIT settings
     parser.add_argument("--patch_size", type=int, default=16, help="define the patch size.")
-    parser.add_argument("--encoder_embed_dim", type=int, default=1024, help="dimension for encoder.")
+    parser.add_argument("--encoder_embed_dim", type=int, default=768, help="dimension for encoder.")
     parser.add_argument("--decoder_embed_dim", type=int, default=512, help="dimension for decoder.")
-    parser.add_argument("--encoder_depth", type=int, default=24, help="depth for encoder.")
+    parser.add_argument("--encoder_depth", type=int, default=12, help="depth for encoder.")
     parser.add_argument("--decoder_depth", type=int, default=8, help="depth for decoder.")
-    parser.add_argument("--encoder_num_head", type=int, default=16, help="head number for encoder.")
+    parser.add_argument("--encoder_num_head", type=int, default=12, help="head number for encoder.")
     parser.add_argument("--decoder_num_head", type=int, default=16, help="head number for decoder.")
 
     # Optimizer parameters
@@ -68,7 +68,7 @@ def get_args_parser():
     # Dataset parameters
     parser.add_argument('--root', default="/home/wangbowen/DATA/cityscapes", type=str,
                         help='dataset path')
-    parser.add_argument('--output_dir', default='save_model/',
+    parser.add_argument('--output_dir', default='save_model',
                         help='path where to save, empty for no saving')
     parser.add_argument('--log_dir', default='save_model',
                         help='path where to tensorboard log')
@@ -104,10 +104,11 @@ def main():
 
     if args.use_pre:
         # use the pre-trained parameter from mae paper
-        checkpoint = torch.load("save_model/mae_visualize_vit_large.pth", map_location='cpu')
+        checkpoint = torch.load("save_model/mae_pretrain_vit_base.pth", map_location='cpu')
         checkpoint_model = checkpoint['model']
         interpolate_pos_embed(model, checkpoint_model)
         model_without_ddp.load_state_dict(checkpoint_model, strict=False)
+        print("load pre-trained model")
 
     if args.distributed:
         num_tasks = misc.get_world_size()
@@ -152,11 +153,9 @@ def main():
         if args.distributed:
             sampler_train.set_epoch(epoch)
 
-        if args.output_dir and ((epoch + 1) % 50 == 0 or epoch + 1 == args.num_epochs):
-            torch.save(model_without_ddp.state_dict(),
-                       args.output_dir + "mae_pre_epoch" + str(epoch) + "_crop" + str(args.crop_size[0]) + "_patch" +
-                       str(args.patch_size) + "_ed" + str(args.encoder_embed_dim) + "_depth" + str(args.encoder_depth) +
-                       "_head" + str(args.encoder_num_head) + ".pt")
+        if args.output_dir and ((epoch + 1) % 10 == 0 or epoch + 1 == args.num_epochs):
+            misc.save_model(args=args, model=model, model_without_ddp=model_without_ddp, optimizer=optimizer,
+                loss_scaler=loss_scaler, epoch=epoch)
 
         train_stats = train_one_epoch(
             model, train_loader,
@@ -227,14 +226,14 @@ def train_one_epoch(model: torch.nn.Module,
         lr = optimizer.param_groups[0]["lr"]
         metric_logger.update(lr=lr)
 
-        loss_value_reduce = misc.all_reduce_mean(loss_value)
-        if log_writer is not None and (data_iter_step + 1) % accum_iter == 0:
-            """ We use epoch_1000x as the x-axis in tensorboard.
-            This calibrates different curves when batch size changes.
-            """
-            epoch_1000x = int((data_iter_step / len(data_loader) + epoch) * 1000)
-            log_writer.add_scalar('train_loss', loss_value_reduce, epoch_1000x)
-            log_writer.add_scalar('lr', lr, epoch_1000x)
+        # loss_value_reduce = misc.all_reduce_mean(loss_value)
+        # if log_writer is not None and (data_iter_step + 1) % accum_iter == 0:
+        #     """ We use epoch_1000x as the x-axis in tensorboard.
+        #     This calibrates different curves when batch size changes.
+        #     """
+        #     epoch_1000x = int((data_iter_step / len(data_loader) + epoch) * 1000)
+        #     log_writer.add_scalar('train_loss', loss_value_reduce, epoch_1000x)
+        #     log_writer.add_scalar('lr', lr, epoch_1000x)
 
 
     # gather the stats from all processes

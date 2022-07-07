@@ -4,6 +4,7 @@ import torch.nn as nn
 import torch
 import os
 import torch.nn.functional as F
+from timm.models.helpers import load_checkpoint
 
 
 class Segmenter(nn.Module):
@@ -44,15 +45,21 @@ class Segmenter(nn.Module):
 
 def create_segmenter(args):
     encoder = vit_encoder(img_size=args.crop_size[0], patch_size=args.patch_size, embed_dim=args.encoder_embed_dim, depth=args.encoder_depth, num_heads=args.encoder_num_head)
-    check_point = torch.load(os.path.join("save_model", args.pre_model), map_location="cuda:0")
-    state_dict = ["decoder", "mask_token"]
-    record = []
-    for k, v in check_point.items():
-        if state_dict[0] in k or state_dict[1] in k:
-            record.append(k)
-    for item in record:
-        del check_point[item]
-    encoder.load_state_dict(check_point, strict=True)
+
+    if "mae" not in args.pre_model:
+        load_checkpoint(encoder, args.output_dir + args.pre_model)
+    else:
+        check_points = torch.load(os.path.join("save_model", args.pre_model), map_location="cpu")
+        check_point = check_points["model"]
+        state_dict = ["decoder", "mask_token"]
+        record = []
+        for k, v in check_point.items():
+            if state_dict[0] in k or state_dict[1] in k:
+                record.append(k)
+        for item in record:
+            del check_point[item]
+        encoder.load_state_dict(check_point, strict=True)
+
     print("load pre-trained weight from: ", args.pre_model)
 
     decoder = sg_vit_mask_decoder(patch_size=args.patch_size, encoder_embed_dim=args.encoder_embed_dim,

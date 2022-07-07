@@ -5,18 +5,19 @@ def get_args_parser():
     parser = argparse.ArgumentParser(description="PSP-Net Network", add_help=False)
 
     # train settings
-    parser.add_argument("--dataset", type=str, default="cityscapes")
+    parser.add_argument("--dataset", type=str, default="facade")
     parser.add_argument("--model_name", type=str, default="Segmenter")
-    parser.add_argument("--pre_model", type=str, default="mae_pre_epoch99_crop640_patch8_ed768_depth12_head12.pt")
-    parser.add_argument("--batch_size", type=int, default=1,
+    parser.add_argument("--pre_model", type=str, default="ViT-B_16.npz")
+    parser.add_argument("--batch_size", type=int, default=4,
                         help="Number of images sent to the network in one step.")
-    parser.add_argument("--root", type=str, default="/home/wangbowen/DATA/cityscapes",
+    parser.add_argument("--root", type=str, default="/home/wangbowen/DATA/",
                         help="Path to the directory containing the image list.")
+    parser.add_argument("--setting_size", type=int, default=[1024, 2048],
+                        help="original size of data set image.")
     parser.add_argument("--crop_size", type=int, default=[640, 640],
                         help="crop size for training and inference slice.")
     parser.add_argument("--stride_rate", type=float, default=0.5, help="stride ratio.")
-    parser.add_argument("--num_epoch", type=int, default=200, help="Number of training steps.")
-    parser.add_argument("--num_classes", type=int, default=19, help="Number of class for dataset.")
+    parser.add_argument("--num_epoch", type=int, default=60, help="Number of training steps.")
     parser.add_argument('--accum_iter', default=1, type=int,
                         help='Accumulate gradient iterations (for increasing the effective batch size under memory constraints)')
 
@@ -26,7 +27,7 @@ def get_args_parser():
     parser.add_argument("--weight_decay", type=float, default=1e-4, help="weight decay.")
 
     # VIT settings
-    parser.add_argument("--patch_size", type=int, default=8, help="define the patch size.")
+    parser.add_argument("--patch_size", type=int, default=16, help="define the patch size.")
     parser.add_argument("--encoder_embed_dim", type=int, default=768, help="dimension for encoder.")
     parser.add_argument("--decoder_embed_dim", type=int, default=512, help="dimension for decoder.")
     parser.add_argument("--encoder_depth", type=int, default=12, help="depth for encoder.")
@@ -38,10 +39,11 @@ def get_args_parser():
     parser.add_argument("--save_summary", type=str, default="save_model")
     parser.add_argument("--print_freq", type=str, default=5, help="print frequency.")
     parser.add_argument('--output_dir', default='save_model/', help='path where to save, empty for no saving')
+    parser.add_argument("--use_ignore", type=bool, default=False)
 
     # # distributed training parameters
     parser.add_argument('--num_workers', default=4, type=int)
-    parser.add_argument("--device", type=str, default='cuda',
+    parser.add_argument("--device", type=str, default='cuda:1',
                         help="choose gpu device.")
     parser.add_argument('--world_size', default=1, type=int, help='number of distributed processes')
     parser.add_argument("--local_rank", type=int)

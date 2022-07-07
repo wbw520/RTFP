@@ -10,7 +10,7 @@ class IouCal(object):
                          "vegetation:", "terrain:", "sky:", "person:", "rider:", "car:", "truck:", "bus:", "train:",
                          "motorcycle:", "bicycle:"]
         elif args.dataset == "facade":
-            self.name = []
+            self.name = ["BG:", "building:", "window:", "sky:", "roof:", "door:", "tree:", "people:", "car:", "sign:"]
 
     def fast_hist(self, label, pred, num_class):
         k = (label >= 0) & (pred < self.num_class)
