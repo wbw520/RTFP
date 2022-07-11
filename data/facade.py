@@ -57,6 +57,7 @@ def read_json(file_name):
             record_rectangle[label].append(np.array(points, dtype=np.int32))
         else:
             record[label].append(np.array(points, dtype=np.int32))
+
     return record, record_rectangle
 
 
@@ -86,6 +87,7 @@ class Facade(torch.utils.data.Dataset):
 
     def __getitem__(self, index):
         img_path, mask_path = self.imgs[index]
+        print(img_path)
         img, mask = Image.open(img_path).convert('RGB'), Image.open(mask_path)
 
         mask = np.array(mask)

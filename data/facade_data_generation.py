@@ -4,6 +4,7 @@ from data.facade import read_json, PolygonTrans
 import os
 from PIL import Image
 import shutil
+import numpy as np
 
 
 def main():
@@ -33,15 +34,18 @@ def main():
 
         PT = PolygonTrans()
         mask = PT.polygon2mask((h, w), polygons, rectangles)
+        if np.sum(mask == 10):
+            print("--------------------")
+
         color_map = PT.id2trainId(mask)
 
         image = Image.fromarray(image)
         mask = Image.fromarray(mask)
         color_map = Image.fromarray(color_map)
 
-        image.save(root_img + "/" + img + ".jpg")
-        mask.save(root_binary_mask + "/" + img + ".jpg")
-        color_map.save(root_color_mask + "/" + img + ".jpg")
+        image.save(root_img + "/" + img + ".png")
+        mask.save(root_binary_mask + "/" + img + ".png")
+        color_map.save(root_color_mask + "/" + img + ".png")
 
 
 if __name__ == '__main__':

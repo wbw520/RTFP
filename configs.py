@@ -8,7 +8,7 @@ def get_args_parser():
     parser.add_argument("--dataset", type=str, default="facade")
     parser.add_argument("--model_name", type=str, default="PSPNet")
     parser.add_argument("--pre_model", type=str, default="ViT-B_16.npz")
-    parser.add_argument("--batch_size", type=int, default=4,
+    parser.add_argument("--batch_size", type=int, default=2,
                         help="Number of images sent to the network in one step.")
     parser.add_argument("--root", type=str, default="/home/wangbowen/DATA/",
                         help="Path to the directory containing the image list.")
@@ -42,7 +42,7 @@ def get_args_parser():
     parser.add_argument("--use_ignore", type=bool, default=False)
 
     # # distributed training parameters
-    parser.add_argument('--num_workers', default=4, type=int)
+    parser.add_argument('--num_workers', default=0, type=int)
     parser.add_argument("--device", type=str, default='cuda:1',
                         help="choose gpu device.")
     parser.add_argument('--world_size', default=1, type=int, help='number of distributed processes')
