@@ -47,8 +47,10 @@ def create_segmenter(args):
     encoder = vit_encoder(img_size=args.crop_size[0], patch_size=args.patch_size, embed_dim=args.encoder_embed_dim, depth=args.encoder_depth, num_heads=args.encoder_num_head)
 
     if "mae" not in args.pre_model:
+        # load pre-model trained by ImageNet
         load_checkpoint(encoder, args.output_dir + args.pre_model)
     else:
+        # load pre-model trained by MAE
         check_points = torch.load(os.path.join("save_model", args.pre_model), map_location="cpu")
         check_point = check_points["model"]
         state_dict = ["decoder", "mask_token"]

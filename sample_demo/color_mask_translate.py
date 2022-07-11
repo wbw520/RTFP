@@ -46,7 +46,7 @@ def main():
 
 if __name__ == '__main__':
     root = "/home/wangbowen/DATA/Facade/"
-    name = "zhao"
+    name = "wang"
     use_predict = ""
     shutil.rmtree(root + name + "translated_data", ignore_errors=True)
     root_img = root + name + "_translated_data/images"

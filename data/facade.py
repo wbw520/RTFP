@@ -61,14 +61,15 @@ def read_json(file_name):
 
 
 def prepare_facade_data(args):
-    roots = args.root + "Facade/wang_translated_data/"
+    roots = args.root + "Facade/translated_data/"
     items = get_name(roots + "images", mode_folder=False)
     record = []
     for item in items:
         record.append([roots + "images/" + item, roots + "binary_mask/" + item])
 
-    train, val = train_test_split(record, train_size=0.9, random_state=1)
-    return {"train": train, "val": val}
+    train, other = train_test_split(record, train_size=0.8, random_state=1)
+    val, test = train_test_split(record, train_size=0.5, random_state=1)
+    return {"train": train, "val": val, "test": test}
 
 
 class Facade(torch.utils.data.Dataset):

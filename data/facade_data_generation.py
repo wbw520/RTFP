@@ -46,12 +46,11 @@ def main():
 
 if __name__ == '__main__':
     root = "/home/wangbowen/DATA/Facade/"
-    name = "zhao"
-    use_predict = ""
-    shutil.rmtree(root + name + "translated_data", ignore_errors=True)
-    root_img = root + name + "_translated_data/images"
-    root_color_mask = root + name + "_translated_data/color_mask"
-    root_binary_mask = root + name + "_translated_data/binary_mask"
+    name = "raw_data"
+    shutil.rmtree(root + "translated_data", ignore_errors=True)
+    root_img = root + "translated_data/images"
+    root_color_mask = root + "translated_data/color_mask"
+    root_binary_mask = root + "translated_data/binary_mask"
     os.makedirs(root_img, exist_ok=True)
     os.makedirs(root_color_mask, exist_ok=True)
     os.makedirs(root_binary_mask, exist_ok=True)
