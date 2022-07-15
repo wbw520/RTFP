@@ -86,7 +86,11 @@ def evaluation(args, best_record, epoch, model, model_without_ddp, val_loader, c
         best_record['acc_cls'] = acc_cls
         best_record['mean_iou'] = mean_iou
         if args.output_dir:
-            torch.save(model_without_ddp.state_dict(), args.output_dir + args.dataset + "_" + args.model_name + ".pt")
+            if args.model_name == "Segmenter":
+                save_name = args.model_name + "_" + args.encoder
+            else:
+                save_name = args.model_name
+            torch.save(model_without_ddp.state_dict(), args.output_dir + args.dataset + "_" + save_name + ".pt")
 
     print('-----------------------------------------------------------------------------------------------------------')
     print('[epoch %d], [val loss %.5f], [acc %.5f], [acc_cls %.5f], [mean_iou %.5f]' % (
@@ -97,6 +101,25 @@ def evaluation(args, best_record, epoch, model, model_without_ddp, val_loader, c
                     best_record['acc_cls'], best_record['mean_iou'], best_record['epoch']))
 
     print('-----------------------------------------------------------------------------------------------------------')
+
+
+@torch.no_grad()
+def evaluation_none_training(args, model, val_loader, device):
+    model.eval()
+    iou = IouCal(args)
+    for i_batch, data in enumerate(val_loader):
+        if i_batch % 5 == 0:
+            print(str(i_batch) + "/" + str(len(val_loader)))
+        inputs = data["images"].to(device, dtype=torch.float32)
+        mask = data["masks"].to(device, dtype=torch.int64)
+
+        pred, full_pred = inference_sliding(args, model, inputs)
+        iou.evaluate(pred, mask)
+
+    acc, acc_cls, mean_iou = iou.iou_demo()
+    print("acc:", acc)
+    print("acc_cls", acc_cls)
+    print("mean_iou", mean_iou)
 
 
 @torch.no_grad()

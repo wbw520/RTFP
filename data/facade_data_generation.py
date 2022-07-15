@@ -34,8 +34,6 @@ def main():
 
         PT = PolygonTrans()
         mask = PT.polygon2mask((h, w), polygons, rectangles)
-        if np.sum(mask == 10):
-            print("--------------------")
 
         color_map = PT.id2trainId(mask)
 

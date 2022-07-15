@@ -7,8 +7,8 @@ def get_args_parser():
     # train settings
     parser.add_argument("--dataset", type=str, default="facade")
     parser.add_argument("--model_name", type=str, default="PSPNet")
-    parser.add_argument("--pre_model", type=str, default="ViT-B_16.npz")
-    parser.add_argument("--batch_size", type=int, default=2,
+    parser.add_argument("--pre_model", type=str, default="ViT-B_8.npz")
+    parser.add_argument("--batch_size", type=int, default=4,
                         help="Number of images sent to the network in one step.")
     parser.add_argument("--root", type=str, default="/home/wangbowen/DATA/",
                         help="Path to the directory containing the image list.")
@@ -27,12 +27,9 @@ def get_args_parser():
     parser.add_argument("--weight_decay", type=float, default=1e-4, help="weight decay.")
 
     # VIT settings
-    parser.add_argument("--patch_size", type=int, default=16, help="define the patch size.")
-    parser.add_argument("--encoder_embed_dim", type=int, default=768, help="dimension for encoder.")
+    parser.add_argument("--encoder", type=str, default="vit_base_patch8", help="name for encoder")
     parser.add_argument("--decoder_embed_dim", type=int, default=512, help="dimension for decoder.")
-    parser.add_argument("--encoder_depth", type=int, default=12, help="depth for encoder.")
     parser.add_argument("--decoder_depth", type=int, default=2, help="depth for decoder.")
-    parser.add_argument("--encoder_num_head", type=int, default=12, help="head number for encoder.")
     parser.add_argument("--decoder_num_head", type=int, default=8, help="head number for decoder.")
 
     # other settings
@@ -42,11 +39,10 @@ def get_args_parser():
     parser.add_argument("--use_ignore", type=bool, default=False)
 
     # # distributed training parameters
-    parser.add_argument('--num_workers', default=0, type=int)
-    parser.add_argument("--device", type=str, default='cuda:1',
-                        help="choose gpu device.")
+    parser.add_argument('--num_workers', default=4, type=int)
+    parser.add_argument("--device", type=str, default='cuda', help="choose gpu device.")
     parser.add_argument('--world_size', default=1, type=int, help='number of distributed processes')
-    parser.add_argument("--local_rank", type=int)
+    parser.add_argument("--local_rank", default=-1, type=int)
     parser.add_argument('--dist_on_itp', action='store_true')
     parser.add_argument('--dist_url', default='env://', help='url used to set up distributed training')
 

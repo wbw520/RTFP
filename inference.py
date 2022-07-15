@@ -1,25 +1,18 @@
 import argparse
 import torch.backends.cudnn as cudnn
 import torch
+from data.get_data_set import get_data
 from PIL import Image
 from data.loader_tools import get_standard_transformations
 import utils2.misc as misc
+from utils.base_tools import get_name
 from configs import get_args_parser
 from model.get_model import model_generation
 from utils.engine import inference_sliding
-from data.cityscapes import ColorTransition
 from data.facade import PolygonTrans
 import matplotlib.pyplot as plt
 import numpy as np
 import os
-
-
-def get_name(root, mode_folder=True):
-    for root, dirs, file in os.walk(root):
-        if mode_folder:
-            return dirs
-        else:
-            return file
 
 
 def show_single(image, location=None, save=False):
@@ -40,9 +33,16 @@ def main():
     misc.init_distributed_mode(args)
     device = torch.device(args.device)
     cudnn.benchmark = True
+    train_set, val_set, ignore_index = get_data(args)
     model = model_generation(args)
     model.to(device)
-    checkpoint = torch.load(args.output_dir + args.dataset + "_" + args.model_name + ".pt", map_location="cuda:1")
+
+    if args.model_name == "Segmenter":
+        save_name = args.model_name + "_" + args.encoder
+    else:
+        save_name = args.model_name
+
+    checkpoint = torch.load(args.output_dir + args.dataset + "_" + save_name + ".pt", map_location="cuda:0")
     model.load_state_dict(checkpoint, strict=True)
     model.eval()
 
@@ -59,6 +59,5 @@ if __name__ == '__main__':
     os.makedirs('demo/', exist_ok=True)
     parser = argparse.ArgumentParser('model training and evaluation script', parents=[get_args_parser()])
     args = parser.parse_args()
-    args.num_classes = 10
-    img_path = "/home/wangbowen/DATA/Facade/zhao_translated_data/images/IMG_1282.jpg"
+    img_path = "/home/wangbowen/DATA/Facade/translated_data/images/IMG_1287.png"
     main()

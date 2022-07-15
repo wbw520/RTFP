@@ -69,7 +69,7 @@ def prepare_facade_data(args):
         record.append([roots + "images/" + item, roots + "binary_mask/" + item])
 
     train, other = train_test_split(record, train_size=0.8, random_state=1)
-    val, test = train_test_split(record, train_size=0.5, random_state=1)
+    val, test = train_test_split(other, train_size=0.5, random_state=1)
     return {"train": train, "val": val, "test": test}
 
 
@@ -87,7 +87,6 @@ class Facade(torch.utils.data.Dataset):
 
     def __getitem__(self, index):
         img_path, mask_path = self.imgs[index]
-        print(img_path)
         img, mask = Image.open(img_path).convert('RGB'), Image.open(mask_path)
 
         mask = np.array(mask)

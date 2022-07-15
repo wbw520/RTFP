@@ -78,6 +78,28 @@ def resize_pos_embed(posemb, grid_old_shape, grid_new_shape, num_extra_tokens):
     return posemb
 
 
-def vit_encoder(**kwargs):
-    model = VisionTransformer(mlp_ratio=4, qkv_bias=True, norm_layer=partial(nn.LayerNorm, eps=1e-6), num_classes=0, **kwargs)
+def vit_base_patch8(**kwargs):
+    model = VisionTransformer(patch_size=8, embed_dim=768, depth=12, num_heads=12, mlp_ratio=4, qkv_bias=True,
+                              norm_layer=partial(nn.LayerNorm, eps=1e-6), num_classes=0,
+                              **kwargs)
     return model
+
+
+def vit_base_patch16(**kwargs):
+    model = VisionTransformer(patch_size=16, embed_dim=768, depth=12, num_heads=12, mlp_ratio=4, qkv_bias=True,
+                              norm_layer=partial(nn.LayerNorm, eps=1e-6), num_classes=0,
+                              **kwargs)
+    return model
+
+
+def vit_base_patch32(**kwargs):
+    model = VisionTransformer(patch_size=32, embed_dim=768, depth=12, num_heads=12, mlp_ratio=4, qkv_bias=True,
+                              norm_layer=partial(nn.LayerNorm, eps=1e-6), num_classes=0,
+                              **kwargs)
+    return model
+
+
+# set recommended archs
+vit_base_patch8 = vit_base_patch8
+vit_base_patch16 = vit_base_patch16
+vit_base_patch32 = vit_base_patch32

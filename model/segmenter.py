@@ -1,9 +1,10 @@
-from model.vit_model import vit_encoder
+import model.vit_model as vit
 from model.segmenter_decoder import sg_vit_mask_decoder
 import torch.nn as nn
 import torch
 import os
 import torch.nn.functional as F
+import re
 from timm.models.helpers import load_checkpoint
 
 
@@ -43,9 +44,25 @@ class Segmenter(nn.Module):
         return self.decoder.get_attention_map(x, layer_id)
 
 
-def create_segmenter(args):
-    encoder = vit_encoder(img_size=args.crop_size[0], patch_size=args.patch_size, embed_dim=args.encoder_embed_dim, depth=args.encoder_depth, num_heads=args.encoder_num_head)
+def set_decoder_parameter(name):
+    if "small" in name:
+        encoder_dim = 384
+    elif "base" in name:
+        encoder_dim = 768
+    elif "large" in name:
+        encoder_dim = 1024
+    elif "huge" in name:
+        encoder_dim = 1280
+    else:
+        raise "type of encoder is not defined."
 
+    patch_size = re.findall("\d+", name)
+
+    return encoder_dim, int(patch_size[0])
+
+
+def create_segmenter(args):
+    encoder = vit.__dict__[args.encoder](img_size=args.crop_size[0])
     if "mae" not in args.pre_model:
         print("load pre-model trained by ImageNet")
         load_checkpoint(encoder, args.output_dir + args.pre_model)
@@ -64,7 +81,8 @@ def create_segmenter(args):
 
     print("load pre-trained weight from: ", args.pre_model)
 
-    decoder = sg_vit_mask_decoder(patch_size=args.patch_size, encoder_embed_dim=args.encoder_embed_dim,
+    encoder_embed_dim, patch_size = set_decoder_parameter(args.encoder)
+    decoder = sg_vit_mask_decoder(patch_size=patch_size, encoder_embed_dim=encoder_embed_dim,
                                   decoder_embed_dim=args.decoder_embed_dim, decoder_depth=args.decoder_depth, decoder_num_heads=args.decoder_num_head, n_cls=args.num_classes)
     model = Segmenter(encoder, decoder)
 
