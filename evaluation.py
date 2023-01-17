@@ -38,5 +38,4 @@ if __name__ == '__main__':
     os.makedirs('demo/', exist_ok=True)
     parser = argparse.ArgumentParser('model training and evaluation script', parents=[get_args_parser()])
     args = parser.parse_args()
-    img_path = "/home/wangbowen/DATA/Facade/translated_data/images/IMG_1287.png"
     main()

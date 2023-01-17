@@ -31,11 +31,17 @@ class PolygonTrans():
         return mask
 
     # translate label_id to color img
-    def id2trainId(self, label):
+    def id2trainId(self, label, select=None):
         w, h = label.shape
         label_copy = np.zeros((w, h, 3), dtype=np.uint8)
         for index, color in colors.items():
-            label_copy[label == index] = color
+            if select is not None:
+                if index == select:
+                    label_copy[label == index] = color
+                else:
+                    continue
+            else:
+                label_copy[label == index] = color
         return label_copy.astype(np.uint8)
 
 

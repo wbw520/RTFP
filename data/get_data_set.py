@@ -24,7 +24,7 @@ def get_data(args, evaluation_setting=None):
         else:
             current_set = "val"
 
-        val_set = facade.Facade(args, 'test', joint_transform=joint_transformations_val,
+        val_set = facade.Facade(args, current_set, joint_transform=joint_transformations_val,
                                             standard_transform=standard_transformations)
         ignore_index = facade.ignore_label
         args.num_classes = facade.num_classes

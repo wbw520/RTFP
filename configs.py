@@ -6,9 +6,9 @@ def get_args_parser():
 
     # train settings
     parser.add_argument("--dataset", type=str, default="facade")
-    parser.add_argument("--model_name", type=str, default="PSPNet")
-    parser.add_argument("--pre_model", type=str, default="ViT-B_8.npz")
-    parser.add_argument("--batch_size", type=int, default=4,
+    parser.add_argument("--model_name", type=str, default="Segmenter")
+    parser.add_argument("--pre_model", type=str, default="ViT-B_16.npz")
+    parser.add_argument("--batch_size", type=int, default=1,
                         help="Number of images sent to the network in one step.")
     parser.add_argument("--root", type=str, default="/home/wangbowen/DATA/",
                         help="Path to the directory containing the image list.")
@@ -27,7 +27,7 @@ def get_args_parser():
     parser.add_argument("--weight_decay", type=float, default=1e-4, help="weight decay.")
 
     # VIT settings
-    parser.add_argument("--encoder", type=str, default="vit_base_patch8", help="name for encoder")
+    parser.add_argument("--encoder", type=str, default="vit_base_patch16", help="name for encoder")
     parser.add_argument("--decoder_embed_dim", type=int, default=512, help="dimension for decoder.")
     parser.add_argument("--decoder_depth", type=int, default=2, help="depth for decoder.")
     parser.add_argument("--decoder_num_head", type=int, default=8, help="head number for decoder.")
