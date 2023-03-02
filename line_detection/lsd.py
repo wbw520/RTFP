@@ -3,6 +3,7 @@ from inference import show_single
 
 
 src = cv2.imread("/home/wangbowen/DATA/Facade/translated_data/images/32052284_477d66a5ae_o.png")
+print(src.shape)
 gray = cv2.cvtColor(src, cv2.COLOR_BGR2GRAY)
 src = cv2.cvtColor(src, cv2.COLOR_BGR2RGB)
 gray = cv2.GaussianBlur(gray, (5, 5), 5)
@@ -18,4 +19,4 @@ for dline in dlines[0]:
     y1 = int(round(dline[0][3]))
     cv2.line(src, (x0, y0), (x1, y1), 255, 2, cv2.LINE_AA)
 
-show_single(src, save=True, name="lsd.png")
+show_single(src, save=True, name="../demo/lsd.png")

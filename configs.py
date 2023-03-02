@@ -6,9 +6,9 @@ def get_args_parser():
 
     # train settings
     parser.add_argument("--dataset", type=str, default="facade")
-    parser.add_argument("--model_name", type=str, default="Segmenter")
+    parser.add_argument("--model_name", type=str, default="PSPNet")
     parser.add_argument("--pre_model", type=str, default="ViT-B_16.npz")
-    parser.add_argument("--batch_size", type=int, default=1,
+    parser.add_argument("--batch_size", type=int, default=4,
                         help="Number of images sent to the network in one step.")
     parser.add_argument("--root", type=str, default="/home/wangbowen/DATA/",
                         help="Path to the directory containing the image list.")

@@ -26,14 +26,20 @@ class IouCal(object):
             self.hist += self.fast_hist(label.flatten(), pred.flatten(), self.num_class)
 
     def iou_demo(self):
+        hist2 = np.zeros((self.num_class - 1, self.num_class - 1))
+        for s in range(self.num_class - 1):
+            for k in range(self.num_class - 1):
+                hist2[s][k] = self.hist[s + 1][k + 1]
+
+        self.hist = hist2
         acc = np.diag(self.hist).sum() / self.hist.sum()
         acc_cls = np.diag(self.hist) / self.hist.sum(axis=1)
         acc_cls = np.nanmean(acc_cls)
 
         iou = self.per_class_iou(self.hist)
         STR = ""
-        for i in range(len(self.name)):
-            STR = STR + self.name[i] + str(round(iou[i], 3)) + " "
+        for i in range(len(self.name) - 1):
+            STR = STR + self.name[i+1] + str(round(iou[i], 3)) + " "
         print(STR)
         miou = np.nanmean(iou)
 

@@ -6,7 +6,8 @@ from shapely.geometry import LineString
 
 
 def lsd():
-    src = cv2.imread("/home/wangbowen/DATA/Facade/translated_data/images/32052284_477d66a5ae_o.png")
+    src = cv2.imread("/home/wangbowen/DATA/Facade/translated_data/images/21356938344_4f430d5ce8_b.png")
+    src = cv2.resize(src, (2048, 1024))
     gray = cv2.cvtColor(src, cv2.COLOR_BGR2GRAY)
     src = cv2.cvtColor(src, cv2.COLOR_BGR2RGB)
     gray = cv2.GaussianBlur(gray, (5, 5), 5)
@@ -90,7 +91,7 @@ def line_search(enhance_stats, lines):
     right = LineString([(x + w, y), (x + w, y + h)])
 
     line_list = {"top": top, "left": left, "bottom": bottom, "right": right}
-    distance_thresh = 10
+    distance_thresh = 20
     degree_thresh = 0.1
     max_selection = 1
     record = {"top": [], "left": [], "bottom": [], "right": []}
@@ -105,8 +106,6 @@ def line_search(enhance_stats, lines):
 
             if current_dis > distance_thresh:
                 continue
-
-            # print([current_dis, current_degree, x0, y0, x1, y1])
 
             if key == "top" or key == "bottom":
                 if math.pi * 1/5 < abs(current_degree) < math.pi * 4/5:
@@ -151,11 +150,15 @@ def line_search(enhance_stats, lines):
 
 
 def revision():
-    img = cv2.imread("../demo/test.png")
-    img = cv2.resize(img, (2048, 1152))
-    img_orl = img
+    img = cv2.imread("../demo/window_mask.png")
+    img = cv2.resize(img, (2048, 1024))
+    window_color = [250, 170, 30]
 
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+    img2 = cv2.imread("../demo/color_mask.png")
+    img2 = cv2.resize(img2, (2048, 1024))
+    img2 = cv2.cvtColor(img2, cv2.COLOR_BGR2RGB)
     ret, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
     kernel1 = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
     bin_clo = cv2.erode(binary, kernel1, iterations=1)
@@ -187,12 +190,15 @@ def revision():
         # show_single(current_patch)
 
         x, y, w, h = cv2.boundingRect(current_patch)
+        print(x, y, w, h)
         # print(x, y, w, h)
         # cv2.rectangle(current_patch, (x, y), (x + w, y + h), (225, 0, 255), 2)
         # show_single(current_patch)
 
         detect_lines = line_search([x, y, w, h], lines)
+        print(detect_lines)
         final_point = combine(detect_lines)
+        print(final_point)
 
         if final_point is None:
             continue
@@ -208,7 +214,11 @@ def revision():
                 x1, y1 = round(final_point[w+1][0]), round(final_point[w+1][1])
             cv2.line(scr, (x0, y0), (x1, y1), 255, 2, cv2.LINE_AA)
 
-    show_single(scr, save=True, name="lines_detect.png")
+        polygon = np.array(final_point, np.int32)
+        cv2.fillConvexPoly(img2, polygon, color=window_color)
+
+    show_single(scr, save=True, name="../demo/lines_detect.png")
+    show_single(img2, save=True, name="../demo/revised_mask.png")
 
 
 if __name__ == '__main__':

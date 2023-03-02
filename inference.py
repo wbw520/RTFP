@@ -18,7 +18,12 @@ import os
 def show_single(image, location=None, save=False, name=None):
     # show single image
     image = np.array(image, dtype=np.uint8)
+    fig = plt.figure()
     plt.imshow(image)
+
+    fig.set_size_inches(2048/100.0, 1024/100.0) #输出width*height像素
+    plt.gca().xaxis.set_major_locator(plt.NullLocator())
+    plt.gca().yaxis.set_major_locator(plt.NullLocator())
 
     plt.axis('off')
     plt.subplots_adjust(top=1, bottom=0, left=0, right=1, hspace=0, wspace=0)
@@ -52,14 +57,13 @@ def main():
     img = img.resize((args.setting_size[1], args.setting_size[0]), Image.BILINEAR)
     img = standard_transformations(img).to(device, dtype=torch.float32)
     pred, full_pred = inference_sliding(args, model, img.unsqueeze(0))
-    color_img = PolygonTrans().id2trainId(torch.squeeze(pred, dim=0).cpu().detach().numpy(), select=2)
-    print(color_img.shape)
-    show_single(color_img, save=True, name="color_mask2.png")
+    color_img = PolygonTrans().id2trainId(torch.squeeze(pred, dim=0).cpu().detach().numpy(), select=None)
+    show_single(color_img, save=True, name="demo/color_mask.png")
 
 
 if __name__ == '__main__':
     os.makedirs('demo/', exist_ok=True)
     parser = argparse.ArgumentParser('model training and evaluation script', parents=[get_args_parser()])
     args = parser.parse_args()
-    img_path = "/home/wangbowen/DATA/Facade/translated_data/images/32052284_477d66a5ae_o.png"
+    img_path = "/home/wangbowen/DATA/Facade/translated_data/images/21356938344_4f430d5ce8_b.png"
     main()
