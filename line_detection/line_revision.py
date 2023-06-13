@@ -3,11 +3,15 @@ import numpy as np
 import math
 from inference import show_single
 from shapely.geometry import LineString
+import argparse
+from configs import get_args_parser
+import copy
 
 
 def lsd():
-    src = cv2.imread("/home/wangbowen/DATA/Facade/translated_data/images/21356938344_4f430d5ce8_b.png")
+    src = cv2.imread(args.eval_img)
     src = cv2.resize(src, (2048, 1024))
+    cv2.imwrite("../demo/origin.png", src)
     gray = cv2.cvtColor(src, cv2.COLOR_BGR2GRAY)
     src = cv2.cvtColor(src, cv2.COLOR_BGR2RGB)
     gray = cv2.GaussianBlur(gray, (5, 5), 5)
@@ -15,8 +19,8 @@ def lsd():
 
     LSD = cv2.createLineSegmentDetector(0)
     dlines = LSD.detect(gray)
-
     line_record = []
+    src2 = copy.deepcopy(src)
 
     for dline in dlines[0]:
         x0 = int(round(dline[0][0]))
@@ -24,8 +28,9 @@ def lsd():
         x1 = int(round(dline[0][2]))
         y1 = int(round(dline[0][3]))
         line_record.append([x0, y0, x1, y1])
+        cv2.line(src2, (x0, y0), (x1, y1), 255, 2, cv2.LINE_AA)
 
-    return line_record, src
+    return line_record, src, src2
 
 
 def calc_abc_from_line_2d(x0, y0, x1, y1):
@@ -85,17 +90,20 @@ def combine(lines):
 
 def line_search(enhance_stats, lines):
     x, y, w, h = enhance_stats
+
+    # define four line borders
     top = LineString([(x, y), (x + w, y)])
     bottom = LineString([(x, y + h), (x + w, y + h)])
     left = LineString([(x, y), (x, y + h)])
     right = LineString([(x + w, y), (x + w, y + h)])
 
     line_list = {"top": top, "left": left, "bottom": bottom, "right": right}
-    distance_thresh = 20
-    degree_thresh = 0.1
+    distance_thresh = 5
+    degree_thresh = 0.05
     max_selection = 1
     record = {"top": [], "left": [], "bottom": [], "right": []}
 
+    # search detect line that close to each line border
     for key, value in line_list.items():
         # print(key)
         for (x0, y0, x1, y1) in lines:
@@ -104,9 +112,11 @@ def line_search(enhance_stats, lines):
             current_dis = value.distance(current_line)
             line_len = (x0 - x1)**2 + (y0 - y1)**2
 
+            # whether close to border with a threshold
             if current_dis > distance_thresh:
                 continue
 
+            # whether the slope is close to border, length of line cannot be too long or short
             if key == "top" or key == "bottom":
                 if math.pi * 1/5 < abs(current_degree) < math.pi * 4/5:
                     continue
@@ -120,6 +130,7 @@ def line_search(enhance_stats, lines):
 
             status = True
             for i in range(len(record[key])):
+                # keep the line most close to border
                 if abs(abs(abs(current_degree) - math.pi/2) - abs(abs(record[key][i][1]) - math.pi/2)) < degree_thresh:
                     if record[key][i][0] > current_dis:
                         record[key][i] = [current_dis, current_degree, x0, y0, x1, y1]
@@ -131,7 +142,9 @@ def line_search(enhance_stats, lines):
     final_line = []
     for key2, value2 in record.items():
         value2.sort(key=lambda s: s[0], reverse=False)
+        # how many line used for continues step
         num = min(len(value2), max_selection)
+        # if there is no line add the border
         if num == 0:
             if key2 == "top":
                 final_line.append([y])
@@ -153,7 +166,6 @@ def revision():
     img = cv2.imread("../demo/window_mask.png")
     img = cv2.resize(img, (2048, 1024))
     window_color = [250, 170, 30]
-
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
     img2 = cv2.imread("../demo/color_mask.png")
@@ -167,7 +179,7 @@ def revision():
     # print('num_labels = ', num_labels)
     # print('labels = ', labels)
     # # 不同的连通域赋予不同的颜色
-    lines, scr = lsd()
+    lines, scr, scr2 = lsd()
 
     for i in range(1, num_labels):
         # if i < 10:
@@ -190,7 +202,6 @@ def revision():
         # show_single(current_patch)
 
         x, y, w, h = cv2.boundingRect(current_patch)
-        print(x, y, w, h)
         # print(x, y, w, h)
         # cv2.rectangle(current_patch, (x, y), (x + w, y + h), (225, 0, 255), 2)
         # show_single(current_patch)
@@ -204,22 +215,33 @@ def revision():
             continue
 
         start_x, start_y = None, None
-        for w in range(len(final_point)):
-            x0, y0 = round(final_point[w][0]), round(final_point[w][1])
-            if w == 0:
+        for g in range(len(final_point)):
+            x0, y0 = round(final_point[g][0]), round(final_point[g][1])
+            if g == 0:
                 start_x, start_y = x0, y0
-            if w == 3:
+            if g == 3:
                 x1, y1 = start_x, start_y
             else:
-                x1, y1 = round(final_point[w+1][0]), round(final_point[w+1][1])
+                x1, y1 = round(final_point[g+1][0]), round(final_point[g+1][1])
             cv2.line(scr, (x0, y0), (x1, y1), 255, 2, cv2.LINE_AA)
+
+        for n in range(-5, w, 1):
+            for j in range(-5, h, 1):
+                if int(img2[y+j, x+n, 0]) == 250 and int(img2[y+j, x+n, 1]) == 170 and int(img2[y+j, x+n, 2]) == 30:
+                    img2[y + j, x + n, 0] = 70
+                    img2[y + j, x + n, 1] = 70
+                    img2[y + j, x + n, 2] = 70
 
         polygon = np.array(final_point, np.int32)
         cv2.fillConvexPoly(img2, polygon, color=window_color)
 
-    show_single(scr, save=True, name="../demo/lines_detect.png")
+    show_single(scr2, save=True, name="../demo/lines_detect_lsd.png")
+    show_single(scr, save=True, name="../demo/lines_detect_modified.png")
     show_single(img2, save=True, name="../demo/revised_mask.png")
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser('model training and evaluation script', parents=[get_args_parser()])
+    args = parser.parse_args()
+    img_path = args.eval_img
     revision()

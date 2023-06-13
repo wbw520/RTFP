@@ -8,7 +8,7 @@ def get_args_parser():
     parser.add_argument("--dataset", type=str, default="facade")
     parser.add_argument("--model_name", type=str, default="PSPNet")
     parser.add_argument("--pre_model", type=str, default="ViT-B_16.npz")
-    parser.add_argument("--batch_size", type=int, default=4,
+    parser.add_argument("--batch_size", type=int, default=1,
                         help="Number of images sent to the network in one step.")
     parser.add_argument("--root", type=str, default="/home/wangbowen/DATA/",
                         help="Path to the directory containing the image list.")
@@ -38,12 +38,15 @@ def get_args_parser():
     parser.add_argument('--output_dir', default='save_model/', help='path where to save, empty for no saving')
     parser.add_argument("--use_ignore", type=bool, default=False)
 
-    # # distributed training parameters
+    # distributed training parameters
     parser.add_argument('--num_workers', default=4, type=int)
     parser.add_argument("--device", type=str, default='cuda', help="choose gpu device.")
     parser.add_argument('--world_size', default=1, type=int, help='number of distributed processes')
     parser.add_argument("--local_rank", default=-1, type=int)
     parser.add_argument('--dist_on_itp', action='store_true')
     parser.add_argument('--dist_url', default='env://', help='url used to set up distributed training')
+
+    # distributed training parameters
+    parser.add_argument('--eval_img', default='/home/wangbowen/DATA/Facade/translated_data/images/IMG_1277.png')
 
     return parser

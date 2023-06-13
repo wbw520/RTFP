@@ -5,7 +5,7 @@ from data.get_data_set import get_data
 from PIL import Image
 from data.loader_tools import get_standard_transformations
 import utils2.misc as misc
-from utils.base_tools import get_name
+import cv2
 from configs import get_args_parser
 from model.get_model import model_generation
 from utils.engine import inference_sliding
@@ -57,13 +57,23 @@ def main():
     img = img.resize((args.setting_size[1], args.setting_size[0]), Image.BILINEAR)
     img = standard_transformations(img).to(device, dtype=torch.float32)
     pred, full_pred = inference_sliding(args, model, img.unsqueeze(0))
+
     color_img = PolygonTrans().id2trainId(torch.squeeze(pred, dim=0).cpu().detach().numpy(), select=None)
     show_single(color_img, save=True, name="demo/color_mask.png")
+
+    color_img = PolygonTrans().id2trainId(torch.squeeze(pred, dim=0).cpu().detach().numpy(), select=2)
+    show_single(color_img, save=True, name="demo/window_mask.png")
+
+    img_name = args.eval_img.split("/")[-1]
+    color_image = cv2.imread(color_root + img_name)
+    color_image = cv2.resize(color_image, (2048, 1024))
+    cv2.imwrite("demo/truth.png", color_image)
 
 
 if __name__ == '__main__':
     os.makedirs('demo/', exist_ok=True)
     parser = argparse.ArgumentParser('model training and evaluation script', parents=[get_args_parser()])
     args = parser.parse_args()
-    img_path = "/home/wangbowen/DATA/Facade/translated_data/images/21356938344_4f430d5ce8_b.png"
+    img_path = args.eval_img
+    color_root = "/home/wangbowen/DATA/Facade/translated_data/color_mask/"
     main()
