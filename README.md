@@ -19,5 +19,5 @@ python main.py --model_name Segmenter --batch_size 4 --root [your_root]
 
 ## Inference
 ```
-python inference.py --model_name Segmenter --eval_img[your_root]
+python inference.py --model_name Segmenter --eval_img [your_root]
 ```
