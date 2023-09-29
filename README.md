@@ -4,7 +4,7 @@
 ![Structure Figure](figs/Figure_overview.png)
 
 ## Data Preparation
-Our data is avaliable by contacting wang@ids.osaka-u.ac.jp
+Our data is avaliable by contacting wang@ids.osaka-u.ac.jp.
 Using following command to complie our dataset
 ```
 cd data/
