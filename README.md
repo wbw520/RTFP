@@ -1,4 +1,5 @@
-# Facade Parsing Via Vision Transformer and Line Revision
+# Improving Facade Parsing with Vision Transformers and Line Integration
+[PDF](https://arxiv.org/pdf/2309.15523.pdf)
 
 ## Model Structure
 ![Structure Figure](figs/Figure_overview.png)
