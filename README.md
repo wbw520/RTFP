@@ -5,6 +5,7 @@
 ![Structure Figure](figs/Figure_overview.png)
 
 ## Data Preparation
+[Download](https://drive.google.com/file/d/1KWwRhjwuJHBh_sez2tvKlWjFXjXAe_CZ/view?usp=drive_link)
 Using following command to complie our dataset
 ```
 cd data/
