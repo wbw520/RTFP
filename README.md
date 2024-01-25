@@ -14,7 +14,7 @@ python facade_data_generation.py --root [your_root]
 
 ## Training
 ```
-python main.py --model_name Segmenter --batch_size 4 --root [your_root]
+python train.py --model_name Segmenter --batch_size 4 --root [your_root]
 ```
 
 ## Inference
